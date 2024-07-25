@@ -7,6 +7,9 @@ name = "pypi"
 qiskit = "*"
 qiskit-aer = "*"
 bitstring = "*"
+numpy = "*"
+pillow = "*"
+ipykernel = "*"
 
 [dev-packages]
 
