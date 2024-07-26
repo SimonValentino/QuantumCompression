@@ -25,7 +25,7 @@ def qft(n, invert, reverse):
 
 
 # computes a + b into b
-# a and b have to have the same size n
+# adder shown in this paper https://arxiv.org/pdf/quant-ph/0008033
 def adder(a: QuantumRegister, b: QuantumRegister):
     n = len(a)
 
@@ -43,8 +43,7 @@ def adder(a: QuantumRegister, b: QuantumRegister):
 
 
 # multiplies a and b into output, which is initialized to 0s
-# multiplier shown in this paper
-# https://arxiv.org/pdf/1411.5949
+# multiplier shown in this paper https://arxiv.org/pdf/1411.5949
 def muller(a: QuantumRegister, b: QuantumRegister, output: QuantumRegister):
     n = len(a)
 
