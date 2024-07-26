@@ -1,8 +1,9 @@
-from qiskit import QuantumCircuit, Aer, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, QuantumRegister
 import qiskit
 import numpy as np
 import numpy as np
 from qiskit.circuit.library.standard_gates import PhaseGate
+from PIL import Image
 
 
 # Performs Quantum Fourier Transform
@@ -67,3 +68,10 @@ def muller(a: QuantumRegister, b: QuantumRegister, output: QuantumRegister):
     qc.append(secondqft, output)
 
     return qc
+
+
+# main
+img = Image.open("imgs/img1.png").convert("L")
+img_arr = np.asarray(img)
+
+
