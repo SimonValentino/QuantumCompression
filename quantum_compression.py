@@ -7,6 +7,8 @@ from PIL import Image
 
 # Performs Quantum Fourier Transform
 # invert to do inverse and reverse to swap the ordering
+
+
 def qft(n, invert, reverse):
     qc = QuantumCircuit(n)
     for i in reversed(range(n)):
@@ -69,9 +71,52 @@ def muller(a: QuantumRegister, b: QuantumRegister, output: QuantumRegister):
     return qc
 
 
-def quantize():
-    
-    pass
+def c(u):
+    if u == 0:
+        return 1/np.sqrt(2)
+    else:
+        return 1
+
+
+def dct2(a):
+    # loop through 8x8 blocks
+    m, n = a.shape
+    dct = np.zeros(a.shape)
+    for i in range(0, m, 8):
+        for j in range(0, n, 8):
+            for k in range(0, 8):
+                for l in range(0, 8):
+                    sum = 0
+                    for p in range(0, 8):
+                        for q in range(0, 8):
+                            sum += a[i+p, j+q] * \
+                                np.cos((2*p+1)*k*np.pi/16) * \
+                                np.cos((2*q+1)*l*np.pi/16)
+                    sum *= 0.25 * c(k) * c(l)
+                    dct[i+k, j+l] = sum
+
+
+def quantize(dct_coefficients):
+    quantization_matrix = np.array([
+        [16, 11, 10, 16, 24, 40, 51, 61],
+        [12, 12, 14, 19, 26, 58, 60, 55],
+        [14, 13, 16, 24, 40, 57, 69, 56],
+        [14, 17, 22, 29, 51, 87, 80, 62],
+        [18, 22, 37, 56, 68, 109, 103, 77],
+        [24, 35, 55, 64, 81, 104, 113, 92],
+        [49, 64, 78, 87, 103, 121, 120, 101],
+        [72, 92, 95, 98, 112, 100, 103, 99]
+    ])
+
+    m, n = dct.shape
+    quantized = np.zeros(dct.shape)
+    for i in range(0, m, 8):
+        for j in range(0, n, 8):
+            for k in range(0, 8):
+                for l in range(0, 8):
+                    quantized[i+k, j+l] = np.round(dct[i+k, j+l] / q[k][l])
+
+    return quantized
 
 
 # main
@@ -79,22 +124,3 @@ img_name = "beaver"
 img = Image.open(f"imgs/{img_name}.png").convert("L")
 img_arr = np.asarray(img)
 print(img_arr)
-
-# divide the image into 8x8 blocks and apply quantization
-quantization_matrix = np.array([
-    [16, 11, 10, 16, 24, 40, 51, 61],
-    [12, 12, 14, 19, 26, 58, 60, 55],
-    [14, 13, 16, 24, 40, 57, 69, 56],
-    [14, 17, 22, 29, 51, 87, 80, 62],
-    [18, 22, 37, 56, 68, 109, 103, 77],
-    [24, 35, 55, 64, 81, 104, 113, 92],
-    [49, 64, 78, 87, 103, 121, 120, 101],
-    [72, 92, 95, 98, 112, 100, 103, 99]
-])
-
-h, w = img_arr.shape
-quantized_img = np.zeros_like(img_arr,)
-for i in range(0, h, 8):
-    for j in range(0, w, 8):
-        block = img_arr[i:i + 8, j:j + 8]
-        quantized_img[i:i + 8, j:j + 8] = quantize(block, quantization_matrix)
