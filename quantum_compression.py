@@ -71,7 +71,9 @@ def muller(a: QuantumRegister, b: QuantumRegister, output: QuantumRegister):
 
 
 # main
-img = Image.open("imgs/img1.png").convert("L")
+img_name = "beaver"
+img = Image.open(f"imgs/{img_name}.png").convert("L")
 img_arr = np.asarray(img)
+print(img_arr)
 
 
