@@ -70,16 +70,6 @@ def muller(a: QuantumRegister, b: QuantumRegister, output: QuantumRegister):
 
 
 def quantize():
-    quantization_matrix = np.array([
-        [16, 11, 10, 16, 24, 40, 51, 61],
-        [12, 12, 14, 19, 26, 58, 60, 55],
-        [14, 13, 16, 24, 40, 57, 69, 56],
-        [14, 17, 22, 29, 51, 87, 80, 62],
-        [18, 22, 37, 56, 68, 109, 103, 77],
-        [24, 35, 55, 64, 81, 104, 113, 92],
-        [49, 64, 78, 87, 103, 121, 120, 101],
-        [72, 92, 95, 98, 112, 100, 103, 99]
-    ])
     
     pass
 
@@ -89,3 +79,22 @@ img_name = "beaver"
 img = Image.open(f"imgs/{img_name}.png").convert("L")
 img_arr = np.asarray(img)
 print(img_arr)
+
+# divide the image into 8x8 blocks and apply quantization
+quantization_matrix = np.array([
+    [16, 11, 10, 16, 24, 40, 51, 61],
+    [12, 12, 14, 19, 26, 58, 60, 55],
+    [14, 13, 16, 24, 40, 57, 69, 56],
+    [14, 17, 22, 29, 51, 87, 80, 62],
+    [18, 22, 37, 56, 68, 109, 103, 77],
+    [24, 35, 55, 64, 81, 104, 113, 92],
+    [49, 64, 78, 87, 103, 121, 120, 101],
+    [72, 92, 95, 98, 112, 100, 103, 99]
+])
+
+h, w = img_arr.shape
+quantized_img = np.zeros_like(img_arr,)
+for i in range(0, h, 8):
+    for j in range(0, w, 8):
+        block = img_arr[i:i + 8, j:j + 8]
+        quantized_img[i:i + 8, j:j + 8] = quantize(block, quantization_matrix)
