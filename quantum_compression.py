@@ -4,12 +4,9 @@ import numpy as np
 import numpy as np
 from qiskit.circuit.library.standard_gates import PhaseGate
 from PIL import Image
-from arithmetic_operations import adder, muller
 
 # Performs Quantum Fourier Transform
 # invert to do inverse and reverse to swap the ordering
-
-
 def qft(n, invert, reverse):
     qc = QuantumCircuit(n)
     for i in reversed(range(n)):
