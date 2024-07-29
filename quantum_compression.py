@@ -78,10 +78,10 @@ def c(u):
         return 1
 
 
-def dct2(a):
+def dct(img_arr):
     # loop through 8x8 blocks
-    m, n = a.shape
-    dct = np.zeros(a.shape)
+    m, n = img_arr.shape
+    dct = np.zeros(img_arr.shape)
     for i in range(0, m, 8):
         for j in range(0, n, 8):
             for k in range(0, 8):
@@ -89,7 +89,7 @@ def dct2(a):
                     sum = 0
                     for p in range(0, 8):
                         for q in range(0, 8):
-                            sum += a[i+p, j+q] * \
+                            sum += img_arr[i+p, j+q] * \
                                 np.cos((2*p+1)*k*np.pi/16) * \
                                 np.cos((2*q+1)*l*np.pi/16)
                     sum *= 0.25 * c(k) * c(l)
@@ -108,13 +108,13 @@ def quantize(dct_coefficients):
         [72, 92, 95, 98, 112, 100, 103, 99]
     ])
 
-    m, n = dct.shape
-    quantized = np.zeros(dct.shape)
+    m, n = dct_coefficients.shape
+    quantized = np.zeros(dct_coefficients.shape)
     for i in range(0, m, 8):
         for j in range(0, n, 8):
             for k in range(0, 8):
                 for l in range(0, 8):
-                    quantized[i+k, j+l] = np.round(dct[i+k, j+l] / q[k][l])
+                    quantized[i+k, j+l] = np.round(dct_coefficients[i+k, j+l] / quantization_matrix[k][l])
 
     return quantized
 
