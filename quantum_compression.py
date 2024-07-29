@@ -7,6 +7,8 @@ from PIL import Image
 
 # Performs Quantum Fourier Transform
 # invert to do inverse and reverse to swap the ordering
+
+
 def qft(n, invert, reverse):
     qc = QuantumCircuit(n)
     for i in reversed(range(n)):
@@ -69,7 +71,32 @@ def muller(a: QuantumRegister, b: QuantumRegister, output: QuantumRegister):
     return qc
 
 
-def quantize():
+def c(u):
+    if u == 0:
+        return 1/np.sqrt(2)
+    else:
+        return 1
+
+
+def dct(img_arr):
+    # loop through 8x8 blocks
+    m, n = img_arr.shape
+    dct = np.zeros(img_arr.shape)
+    for i in range(0, m, 8):
+        for j in range(0, n, 8):
+            for k in range(0, 8):
+                for l in range(0, 8):
+                    sum = 0
+                    for p in range(0, 8):
+                        for q in range(0, 8):
+                            sum += img_arr[i+p, j+q] * \
+                                np.cos((2*p+1)*k*np.pi/16) * \
+                                np.cos((2*q+1)*l*np.pi/16)
+                    sum *= 0.25 * c(k) * c(l)
+                    dct[i+k, j+l] = sum
+
+
+def quantize(dct_coefficients):
     quantization_matrix = np.array([
         [16, 11, 10, 16, 24, 40, 51, 61],
         [12, 12, 14, 19, 26, 58, 60, 55],
@@ -80,8 +107,16 @@ def quantize():
         [49, 64, 78, 87, 103, 121, 120, 101],
         [72, 92, 95, 98, 112, 100, 103, 99]
     ])
-    
-    pass
+
+    m, n = dct_coefficients.shape
+    quantized = np.zeros(dct_coefficients.shape)
+    for i in range(0, m, 8):
+        for j in range(0, n, 8):
+            for k in range(0, 8):
+                for l in range(0, 8):
+                    quantized[i+k, j+l] = np.round(dct_coefficients[i+k, j+l] / quantization_matrix[k][l])
+
+    return quantized
 
 
 # main

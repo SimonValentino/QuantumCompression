@@ -5,11 +5,11 @@ name = "pypi"
 
 [packages]
 qiskit = "*"
-qiskit-aer = "*"
 bitstring = "*"
 numpy = "*"
 pillow = "*"
 ipykernel = "*"
+qiskit-aer = "*"
 
 [dev-packages]
 
