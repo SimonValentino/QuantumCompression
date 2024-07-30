@@ -145,31 +145,27 @@ def apply_UYX(qc, X, Y, coefficient, num_qubits, q):
     # Convert X, Y to binary
     bin_X = format(X, '0{}b'.format(num_qubits - q))
     bin_Y = format(Y, '0{}b'.format(num_qubits - q))
-
     # Apply X and Y gates
     for i in range(len(bin_X)):
-        if bin_X[i] == '1':
+        if bin_X[i] == '1' and i < num_qubits:
             qc.x(i)
-
     for j in range(len(bin_Y)):
-        if bin_Y[j] == '1':
+        if bin_Y[j] == '1' and (j + len(bin_X)) < num_qubits:
             qc.x(j + len(bin_X))
-
     bin_coefficient = format(coefficient, '0{}b'.format(q))
-
     # Apply CNOT gates based on the coefficient
     for k in range(q):
-        if bin_coefficient[k] == '1':
+        if bin_coefficient[k] == '1' and (k + len(bin_X) + len(bin_Y)) < num_qubits:
             qc.cx(k + len(bin_X) + len(bin_Y), num_qubits - q + k)
-
     # Reset X and Y gates
     for i in range(len(bin_X)):
-        if bin_X[i] == '1':
+        if bin_X[i] == '1' and i < num_qubits:
             qc.x(i)
     for j in range(len(bin_Y)):
-        if bin_Y[j] == '1':
+        if bin_Y[j] == '1' and (j + len(bin_X)) < num_qubits:
             qc.x(j + len(bin_X))
-
+      
+        
 
 # Main
 img = Image.open(f"imgs/beaver.png").convert("L")
@@ -218,6 +214,5 @@ coefficients = [
 
 for X, Y, coefficient in coefficients:
     apply_UYX(qc, X, Y, coefficient, num_qubits, q)
-
 
 
