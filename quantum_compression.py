@@ -95,6 +95,8 @@ def dct(img_arr):
                     sum *= 1 / 4 * c(k) * c(l)
                     dct[i + k, j + l] = sum
 
+    return dct
+
 
 def idct(dct_coefficients):
     # loop through 8x8 blocks
@@ -112,6 +114,7 @@ def idct(dct_coefficients):
                                 np.cos((2 * l + 1) * q * np.pi / 16)
                     sum *= 1 / 4
                     idct[i + k, j + l] = sum
+
     return idct
 
 
@@ -135,7 +138,8 @@ def dequantize(quantized_arr, quantization_matrix):
         for j in range(0, n, 8):
             for k in range(0, 8):
                 for l in range(0, 8):
-                    dequantized[i + k, j + l] = quantized_arr[i + k, j + l] * quantization_matrix[k][l]
+                    dequantized[i + k, j + l] = quantized_arr[i +
+                                                              k, j + l] * quantization_matrix[k][l]
 
     return dequantized
 
