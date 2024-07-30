@@ -204,5 +204,20 @@ qc = QuantumCircuit(num_qubits)
 
 for i in range(2 * n):
     qc.h(i)
+qc = QuantumCircuit(num_qubits)
+
+# Creating superposition
+for i in range(2 * n):
+    qc.h(i)
+
+coefficients = [
+    (i, j, int(quantized_coefficients[i, j]))
+    for i in range(quantized_coefficients.shape[0])
+    for j in range(quantized_coefficients.shape[1])
+]
+
+for X, Y, coefficient in coefficients:
+    apply_UYX(qc, X, Y, coefficient, num_qubits, q)
+
 
 
