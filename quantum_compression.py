@@ -5,9 +5,6 @@ import numpy as np
 from qiskit.circuit.library.standard_gates import PhaseGate
 from PIL import Image
 
-# Performs Quantum Fourier Transform
-# invert to do inverse and reverse to swap the ordering
-
 
 def qft(n, invert, reverse):
     qc = QuantumCircuit(n)
@@ -144,12 +141,43 @@ def dequantize(quantized_arr, quantization_matrix):
     return dequantized
 
 
-# main
-img_name = "beaver"
-img = Image.open(f"imgs/{img_name}.png").convert("L")
-img_arr = np.asarray(img)
-print(img_arr)
+def apply_UYX(qc, X, Y, coefficient, num_qubits, q):
+    # Convert X, Y to binary
+    bin_X = format(X, '0{}b'.format(num_qubits - q))
+    bin_Y = format(Y, '0{}b'.format(num_qubits - q))
 
+    # Apply X and Y gates
+    for i in range(len(bin_X)):
+        if bin_X[i] == '1':
+            qc.x(i)
+
+    for j in range(len(bin_Y)):
+        if bin_Y[j] == '1':
+            qc.x(j + len(bin_X))
+
+    bin_coefficient = format(coefficient, '0{}b'.format(q))
+
+    # Apply CNOT gates based on the coefficient
+    for k in range(q):
+        if bin_coefficient[k] == '1':
+            qc.cx(k + len(bin_X) + len(bin_Y), num_qubits - q + k)
+
+    # Reset X and Y gates
+    for i in range(len(bin_X)):
+        if bin_X[i] == '1':
+            qc.x(i)
+    for j in range(len(bin_Y)):
+        if bin_Y[j] == '1':
+            qc.x(j + len(bin_X))
+
+
+# Main
+img = Image.open(f"imgs/beaver.png").convert("L")
+img_arr = np.asarray(img)
+print("Original image array:", img_arr)
+
+
+# Step 1: DCT and quantize
 quantization_matrix = np.array([
     [16, 11, 10, 16, 24, 40, 51, 61],
     [12, 12, 14, 19, 26, 58, 60, 55],
@@ -160,3 +188,21 @@ quantization_matrix = np.array([
     [49, 64, 78, 87, 103, 121, 120, 101],
     [72, 92, 95, 98, 112, 100, 103, 99]
 ])
+
+dct_coefficients = dct(img_arr)
+quantized_coefficients = quantize(dct_coefficients, quantization_matrix)
+print("Quantized DCT Coefficients:\n", quantized_coefficients)
+
+
+# Step 2: Store the quantized DCT coefficients into quantum systems
+q = 8
+n = 8
+
+num_qubits = q + 2 * n
+
+qc = QuantumCircuit(num_qubits)
+
+for i in range(2 * n):
+    qc.h(i)
+
+
