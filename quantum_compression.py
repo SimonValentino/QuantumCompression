@@ -263,5 +263,41 @@ for X, Y, coefficient in coefficients:
 
 
 # Step 3: Storing the quantization matrix
-quantization_matrix_circuit = store_quantization_matrix(
-    quantization_matrix, num_qubits)
+xy_reg = QuantumRegister(6)
+quantization_reg = QuantumRegister(q - 1)
+quantization_matrix_circuit = QuantumCircuit(xy_reg, quantization_reg)
+
+for i in range(6):
+    qc.h(i)
+
+# |16> |000000>
+# |0010000000000>
+
+# 16 -> 0010000
+
+for i in range(quantization_matrix.shape[0]):
+    for j in range(quantization_matrix.shape[1]):
+        xy = 8 * i + j
+        bin_xy = bin(xy)[2:].zfill(6)[::-1]  # 000000
+
+        quant_val = quantization_matrix[i][j]
+        bin_quant_val = bin(quant_val)[2:].zfill(7)[::-1]  # 0000100
+
+        # [0, 1, 2, 3, 4, 5]
+        control_qubits = [k for k in range(6) if bin_xy[k] == "0"]
+
+        # [10]
+        target_qubits = [6 + k for k in range(7) if bin_quant_val[k] == "1"]
+
+        for ind in control_qubits:
+            # |0000000111111>
+            quantization_matrix_circuit.x(ind)  
+
+        for ind in target_qubits:
+            # |0010000111111>
+            quantization_matrix_circuit.mcx(xy_reg, ind)
+
+        for ind in control_qubits:
+            # |0010000000000>
+            quantization_matrix_circuit.x(ind)
+
