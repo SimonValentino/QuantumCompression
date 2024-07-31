@@ -267,8 +267,7 @@ xy_reg = QuantumRegister(6)
 quantization_reg = QuantumRegister(q - 1)
 quantization_matrix_circuit = QuantumCircuit(xy_reg, quantization_reg)
 
-for i in range(6):
-    qc.h(i)
+quantization_matrix_circuit.h(xy_reg)
 
 # |16> |000000>
 # |0010000000000>
