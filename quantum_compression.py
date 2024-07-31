@@ -141,36 +141,87 @@ def dequantize(quantized_arr, quantization_matrix):
     return dequantized
 
 
+def store_quantization_matrix(quant_matrix, num_qubits):
+    q = 8
+    n = 8
+    qc = QuantumCircuit(num_qubits)
+
+    quant_reg = QuantumRegister(q + 5)
+    qc.add_register(quant_reg)
+
+    for i in range(6):
+        qc.h(quant_reg[i])
+
+    for i in range(8):
+        for j in range(8):
+            bin_i = format(i, '03b')
+            bin_j = format(j, '03b')
+
+            value = int(quant_matrix[i][j])
+            bin_value = format(value, '0{}b'.format(q))
+
+            for k in range(q):
+                if bin_value[k] == '1':
+                    qc.mcx([quant_reg[l] for l in range(6)], quant_reg[6 + k])
+
+    return qc
+
+
 def apply_UYX(qc, X, Y, coefficient, num_qubits, q):
     # Convert X, Y to binary
     bin_X = format(X, '0{}b'.format(num_qubits - q))
     bin_Y = format(Y, '0{}b'.format(num_qubits - q))
+
     # Apply X and Y gates
     for i in range(len(bin_X)):
         if bin_X[i] == '1' and i < num_qubits:
             qc.x(i)
+
     for j in range(len(bin_Y)):
         if bin_Y[j] == '1' and (j + len(bin_X)) < num_qubits:
             qc.x(j + len(bin_X))
+
     bin_coefficient = format(coefficient, '0{}b'.format(q))
     # Apply CNOT gates based on the coefficient
     for k in range(q):
         if bin_coefficient[k] == '1' and (k + len(bin_X) + len(bin_Y)) < num_qubits:
             qc.cx(k + len(bin_X) + len(bin_Y), num_qubits - q + k)
+
     # Reset X and Y gates
     for i in range(len(bin_X)):
         if bin_X[i] == '1' and i < num_qubits:
             qc.x(i)
+
     for j in range(len(bin_Y)):
         if bin_Y[j] == '1' and (j + len(bin_X)) < num_qubits:
             qc.x(j + len(bin_X))
-      
-        
+
+
+def store_quantization_matrix(quant_matrix, num_qubits):
+    q = 8
+
+    qc = QuantumCircuit(num_qubits)
+    quant_reg = QuantumRegister(q + 5)
+    qc.add_register(quant_reg)
+
+    for i in range(6):
+        qc.h(quant_reg[i])
+
+    for i in range(8):
+        for j in range(8):
+            value = int(quant_matrix[i][j])
+            bin_value = format(value, '0{}b'.format(q))
+            for k in range(q):
+                if bin_value[k] == '1':
+                    qc.mcx([quant_reg[l] for l in range(6)], quant_reg[6 + k])
+
+    return qc
+
 
 # Main
 img = Image.open(f"imgs/beaver.png").convert("L")
 img_arr = np.asarray(img)
-print("Original image array:", img_arr)
+print("Original image array:\n", img_arr)
 
 
 # Step 1: DCT and quantize
@@ -198,7 +249,6 @@ num_qubits = q + 2 * n
 
 qc = QuantumCircuit(num_qubits)
 
-# Creating superposition
 for i in range(2 * n):
     qc.h(i)
 
@@ -212,3 +262,6 @@ for X, Y, coefficient in coefficients:
     apply_UYX(qc, X, Y, coefficient, num_qubits, q)
 
 
+# Step 3: Storing the quantization matrix
+quantization_matrix_circuit = store_quantization_matrix(
+    quantization_matrix, num_qubits)
