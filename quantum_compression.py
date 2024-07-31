@@ -198,10 +198,6 @@ num_qubits = q + 2 * n
 
 qc = QuantumCircuit(num_qubits)
 
-for i in range(2 * n):
-    qc.h(i)
-qc = QuantumCircuit(num_qubits)
-
 # Creating superposition
 for i in range(2 * n):
     qc.h(i)
