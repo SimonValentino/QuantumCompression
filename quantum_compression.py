@@ -226,7 +226,10 @@ n = 8
 
 num_qubits = q + 2 * n
 
-qc = QuantumCircuit(num_qubits)
+x_reg = QuantumRegister(n)
+y_reg = QuantumRegister(n)
+dct_reg = QuantumRegister(q)
+qc = QuantumCircuit(x_reg, y_reg, dct_reg)
 
 for i in range(2 * n):
     qc.h(i)
@@ -251,3 +254,23 @@ encode_quantization_matrix(qc, quantization_matrix, xy_reg, quantization_reg)
 
 
 # Step 4 inverse quantization
+g = QuantumRegister(1)
+qc.add_register(g)
+
+for i in range(3):
+    qc.cx(x_reg[i], xy_reg[i])
+    qc.cx(y_reg[i], xy_reg[i + 3])
+
+qc.x(xy_reg)
+qc.mcx(xy_reg, g)
+qc.x(xy_reg)
+
+output = QuantumRegister(2 * q - 2)
+qc.add_register(output)
+
+print(dct_reg.size)
+print(quantization_reg.size)
+
+qc.compose(muller(dct_reg[:-1], quantization_reg, output))  # needs control on g
+
+qc.mcx(g, dct_reg[-1], output[-1])
