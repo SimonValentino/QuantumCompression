@@ -271,6 +271,8 @@ qc.add_register(output)
 print(dct_reg.size)
 print(quantization_reg.size)
 
-qc.compose(muller(dct_reg[:-1], quantization_reg, output))  # needs control on g
+# qc.compose(muller(dct_reg[:-1], quantization_reg, output))  # needs control on g
+cmul = muller(dct_reg[:-1], quantization_reg, output).to_gate().control(1)
+qc.append(cmul, [g] + list(dct_reg[:-1]) + list(quantization_reg) + list(output))
 
 qc.mcx(g, dct_reg[-1], output[-1])
