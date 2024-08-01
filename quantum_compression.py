@@ -75,6 +75,7 @@ def c(u):
         return 1
 
 
+# discrete cosine transform on greyscale image
 def dct(img_arr):
     # loop through 8x8 blocks
     m, n = img_arr.shape
@@ -95,6 +96,7 @@ def dct(img_arr):
     return dct
 
 
+# inverse discrete cosine transform on dtc coefficients
 def idct(dct_coefficients):
     # loop through 8x8 blocks
     m, n = dct_coefficients.shape
@@ -115,6 +117,7 @@ def idct(dct_coefficients):
     return idct
 
 
+# puts dtc coefficients trough quantization matrix
 def quantize(dct_coefficients, quantization_matrix):
     m, n = dct_coefficients.shape
     quantized = np.zeros(dct_coefficients.shape)
@@ -139,32 +142,6 @@ def dequantize(quantized_arr, quantization_matrix):
                                                               k, j + l] * quantization_matrix[k][l]
 
     return dequantized
-
-
-def store_quantization_matrix(quant_matrix, num_qubits):
-    q = 8
-    n = 8
-    qc = QuantumCircuit(num_qubits)
-
-    quant_reg = QuantumRegister(q + 5)
-    qc.add_register(quant_reg)
-
-    for i in range(6):
-        qc.h(quant_reg[i])
-
-    for i in range(8):
-        for j in range(8):
-            bin_i = format(i, '03b')
-            bin_j = format(j, '03b')
-
-            value = int(quant_matrix[i][j])
-            bin_value = format(value, '0{}b'.format(q))
-
-            for k in range(q):
-                if bin_value[k] == '1':
-                    qc.mcx([quant_reg[l] for l in range(6)], quant_reg[6 + k])
-
-    return qc
 
 
 def apply_UYX(qc, X, Y, coefficient, num_qubits, q):
@@ -197,25 +174,27 @@ def apply_UYX(qc, X, Y, coefficient, num_qubits, q):
             qc.x(j + len(bin_X))
 
 
-def store_quantization_matrix(quant_matrix, num_qubits):
-    q = 8
+def encode_quantization_matrix(qc, quant_matrix, xy_reg, quantization_reg):
+    for i in range(quant_matrix.shape[0]):
+        for j in range(quant_matrix.shape[1]):
+            xy = 8 * i + j
+            bin_xy = bin(xy)[2:].zfill(6)[::-1]
 
-    qc = QuantumCircuit(num_qubits)
-    quant_reg = QuantumRegister(q + 5)
-    qc.add_register(quant_reg)
+            quant_val = quant_matrix[i][j]
+            bin_quant_val = bin(quant_val)[2:].zfill(7)[::-1]
 
-    for i in range(6):
-        qc.h(quant_reg[i])
+            control_qubits = [k for k in range(6) if bin_xy[k] == "0"]
+            target_qubits = [
+                6 + k for k in range(7) if bin_quant_val[k] == "1"]
 
-    for i in range(8):
-        for j in range(8):
-            value = int(quant_matrix[i][j])
-            bin_value = format(value, '0{}b'.format(q))
-            for k in range(q):
-                if bin_value[k] == '1':
-                    qc.mcx([quant_reg[l] for l in range(6)], quant_reg[6 + k])
+            for ind in control_qubits:
+                qc.x(xy_reg[ind])
 
-    return qc
+            for ind in target_qubits:
+                qc.mcx(xy_reg, quantization_reg[ind - 6])
+
+            for ind in control_qubits:
+                qc.x(xy_reg[ind])
 
 
 # Main
@@ -265,38 +244,10 @@ for X, Y, coefficient in coefficients:
 # Step 3: Storing the quantization matrix
 xy_reg = QuantumRegister(6)
 quantization_reg = QuantumRegister(q - 1)
-quantization_matrix_circuit = QuantumCircuit(xy_reg, quantization_reg)
+qc.add_register(xy_reg)
+qc.add_register(quantization_reg)
 
-quantization_matrix_circuit.h(xy_reg)
+encode_quantization_matrix(qc, quantization_matrix, xy_reg, quantization_reg)
 
-# |16> |000000>
-# |0010000000000>
 
-# 16 -> 0010000
-
-for i in range(quantization_matrix.shape[0]):
-    for j in range(quantization_matrix.shape[1]):
-        xy = 8 * i + j
-        bin_xy = bin(xy)[2:].zfill(6)[::-1]  # 000000
-
-        quant_val = quantization_matrix[i][j]
-        bin_quant_val = bin(quant_val)[2:].zfill(7)[::-1]  # 0000100
-
-        # [0, 1, 2, 3, 4, 5]
-        control_qubits = [k for k in range(6) if bin_xy[k] == "0"]
-
-        # [10]
-        target_qubits = [6 + k for k in range(7) if bin_quant_val[k] == "1"]
-
-        for ind in control_qubits:
-            # |0000000111111>
-            quantization_matrix_circuit.x(ind)  
-
-        for ind in target_qubits:
-            # |0010000111111>
-            quantization_matrix_circuit.mcx(xy_reg, ind)
-
-        for ind in control_qubits:
-            # |0010000000000>
-            quantization_matrix_circuit.x(ind)
-
+# Step 4 inverse quantization
